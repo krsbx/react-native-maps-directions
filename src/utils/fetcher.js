@@ -3,6 +3,7 @@ import { RouteOptions } from './types';
 
 /**
  * @param {RouteOptions} options
+ * @returns {Promise<ReturnType<typeof fetchRoute>>}
  */
 export const fetchRoutes = async (options) => {
   let { destination, origin, waypoints, optimizeWaypoints } = options;
@@ -43,7 +44,7 @@ export const fetchRoutes = async (options) => {
     });
 
   try {
-    const result = fetchRoute({ ...options, origin, destination });
+    const result = await fetchRoute({ ...options, origin, destination });
 
     return result;
   } catch (err) {

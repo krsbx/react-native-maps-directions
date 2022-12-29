@@ -1,3 +1,5 @@
+import { AVOID_TYPES, PRECISION, TIME_PRECISION } from '../utils/constant';
+
 /**
  * @typedef {{
  *    distance: google.maps.Distance;
@@ -31,20 +33,20 @@
  * apikey: string,
  * mode: google.maps.TravelMode,
  * region: string,
- * precision: 'low'|'high',
- * timePrecision: string,
+ * precision: typeof PRECISION[keyof typeof PRECISION],
+ * timePrecision: typeof TIME_PRECISION[keyof typeof TIME_PRECISION],
  * channel?: string,
- * avoid?: ('TOLLS' | 'HIGHWAYS' | 'FERRIES')[],
+ * avoid?: (typeof AVOID_TYPES[keyof typeof AVOID_TYPES])[],
  * index: number,
  * optimizeWaypoints: boolean
  * }} RouteOptions
  */
 
 /**
- * @typedef {{
- *  latitude:number;
- *  longitude:number;
- * }} LatLng
+ * @typedef {({
+ *  latitude: number;
+ *  longitude: number;
+ * }) | [number, number]} LatLng
  */
 
 /**

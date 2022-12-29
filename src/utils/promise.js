@@ -1,8 +1,18 @@
 import { decode } from './decoder';
+import { RouteOptions } from './types';
 
 /**
  * Resolve fetched routes
- * @param {google.maps.DirectionsRoute} route
+ * @param {google.maps.DirectionsRoute & {
+ *  precision: RouteOptions['precision']
+ * }} route
+ * @returns {{
+ *  distance: number;
+ *  duration: number;
+ *  coordinates: ({
+ * latitude: number;
+ * longitude: number;
+ * })[]}}
  */
 
 export const resolveRoutes = (route) => ({
@@ -18,7 +28,7 @@ export const resolveRoutes = (route) => ({
       0
     ) / 60,
   coordinates:
-    precision === 'low'
+    route.precision === 'low'
       ? decode([{ polyline: route.overview_polyline }])
       : route.legs.reduce(
           (carry, curr) => [...carry, ...decode(curr.steps)],

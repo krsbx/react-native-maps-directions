@@ -1,12 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Polyline } from 'react-native-maps';
-import { LatLng } from './utils/types';
 import { fetchRoutes } from './utils/fetcher';
-
-const WAYPOINT_LIMIT = 10;
+import {
+  AVOID_TYPES,
+  DIRECTION_MODE,
+  PRECISION,
+  TIME_PRECISION,
+} from './utils/constant';
+import { convertWaypoint } from './utils/waypoint';
 
 const MapViewDirections = (props) => {
+  const {
+    origin,
+    destination,
+    waypoints,
+    mode,
+    precision,
+    splitWaypoints,
+    avoid,
+    apikey,
+    onReady,
+    onError,
+    language,
+    region,
+    ...rest
+  } = props;
+
   const [coordinates, setCoordinates] = useState(null);
 
   /** @param {(() => void) | null} cb */
@@ -21,7 +41,6 @@ const MapViewDirections = (props) => {
       origin: initialOrigin,
       destination: initialDestination,
       waypoints: initialWaypoints = [],
-      apikey,
       splitWaypoints,
       timePrecision = 'none',
       onError,
@@ -29,7 +48,7 @@ const MapViewDirections = (props) => {
       ...rest
     } = props;
 
-    if (!apikey) {
+    if (!rest.apikey) {
       console.warn(`MapViewDirections Error: Missing API Key`); // eslint-disable-line no-console
       return;
     }
@@ -39,58 +58,12 @@ const MapViewDirections = (props) => {
     }
 
     const timePrecisionString = timePrecision === 'none' ? '' : timePrecision;
-
-    // Routes array which we'll be filling.
-    // We'll perform a Directions API Request for reach route
-    /** @type {({waypoints: (string|LatLng)[]; origin: string|LatLng; destination: string|LatLng})[]} */
-    const routes = [];
-
-    // We need to split the waypoints in chunks, in order to not exceede the max waypoint limit
-    // ~> Chunk up the waypoints, yielding multiple routes
-    if (
-      splitWaypoints &&
-      initialWaypoints &&
-      initialWaypoints.length > WAYPOINT_LIMIT
-    ) {
-      // Split up waypoints in chunks with chunksize WAYPOINT_LIMIT
-      const chunckedWaypoints = initialWaypoints.reduce(
-        (accumulator, waypoint, index) => {
-          const numChunk = Math.floor(index / WAYPOINT_LIMIT);
-          accumulator[numChunk] = [].concat(
-            accumulator[numChunk] || [],
-            waypoint
-          );
-
-          return accumulator;
-        },
-        []
-      );
-
-      // Create routes for each chunk, using:
-      // - Endpoints of previous chunks as startpoints for the route (except for the first chunk, which uses initialOrigin)
-      // - Startpoints of next chunks as endpoints for the route (except for the last chunk, which uses initialDestination)
-      for (let i = 0; i < chunckedWaypoints.length; i++) {
-        routes.push({
-          waypoints: chunckedWaypoints[i],
-          origin:
-            i === 0
-              ? initialOrigin
-              : chunckedWaypoints[i - 1][chunckedWaypoints[i - 1].length - 1],
-          destination:
-            i === chunckedWaypoints.length - 1
-              ? initialDestination
-              : chunckedWaypoints[i + 1][0],
-        });
-      }
-    } else {
-      // No splitting of the waypoints is requested/needed.
-      // ~> Use one single route
-      routes.push({
-        waypoints: initialWaypoints,
-        origin: initialOrigin,
-        destination: initialDestination,
-      });
-    }
+    const routes = convertWaypoint({
+      splitWaypoints,
+      initialDestination,
+      initialOrigin,
+      initialWaypoints,
+    });
 
     try {
       const response = await Promise.all(
@@ -106,8 +79,8 @@ const MapViewDirections = (props) => {
           acc.distance += curr.distance;
           acc.duration += curr.duration;
           acc.fares.push(curr.fare);
-          acc.legs = legs;
-          acc.waypointOrder.push(waypointOrder);
+          acc.legs = curr.legs;
+          acc.waypointOrder.push(curr.waypointOrder);
 
           return acc;
         },
@@ -140,33 +113,9 @@ const MapViewDirections = (props) => {
     }
 
     resetState(() => fetchAndRenderRoute(props));
-  }, [
-    props.origin,
-    props.destination,
-    props.waypoints,
-    props.mode,
-    props.precision,
-    props.splitWaypoints,
-    props.avoid,
-    props.optimizeWaypoints,
-  ]);
+  }, [origin, destination, waypoints, mode, precision, splitWaypoints, avoid]);
 
   if (!coordinates || coordinates.length) return null;
-
-  const {
-    origin, // eslint-disable-line no-unused-vars
-    waypoints, // eslint-disable-line no-unused-vars
-    splitWaypoints, // eslint-disable-line no-unused-vars
-    destination, // eslint-disable-line no-unused-vars
-    apikey, // eslint-disable-line no-unused-vars
-    onReady, // eslint-disable-line no-unused-vars
-    onError, // eslint-disable-line no-unused-vars
-    mode, // eslint-disable-line no-unused-vars
-    language, // eslint-disable-line no-unused-vars
-    region, // eslint-disable-line no-unused-vars
-    precision, // eslint-disable-line no-unused-vars
-    ...rest
-  } = props;
 
   return <Polyline coordinates={coordinates} {...rest} />;
 };
@@ -186,6 +135,7 @@ MapViewDirections.propTypes = {
         latitude: PropTypes.number.isRequired,
         longitude: PropTypes.number.isRequired,
       }),
+      PropTypes.array,
     ])
   ),
   destination: PropTypes.oneOfType([
@@ -199,17 +149,17 @@ MapViewDirections.propTypes = {
   onStart: PropTypes.func,
   onReady: PropTypes.func,
   onError: PropTypes.func,
-  mode: PropTypes.oneOf(['DRIVING', 'BICYCLING', 'TRANSIT', 'WALKING']),
+  mode: PropTypes.oneOf([Object.values(DIRECTION_MODE)]),
   language: PropTypes.string,
   resetOnChange: PropTypes.bool,
   optimizeWaypoints: PropTypes.bool,
   splitWaypoints: PropTypes.bool,
   directionsServiceBaseUrl: PropTypes.string,
   region: PropTypes.string,
-  precision: PropTypes.oneOf(['high', 'low']),
-  timePrecision: PropTypes.oneOf(['now', 'none']),
+  precision: PropTypes.oneOf(Object.values(PRECISION)),
+  timePrecision: PropTypes.oneOf(Object.values(TIME_PRECISION)),
   channel: PropTypes.string,
-  avoid: PropTypes.oneOf(['TOLLS', 'HIGHWAYS', 'FERRIES']),
+  avoid: PropTypes.oneOf([Object.values(AVOID_TYPES)]),
 };
 
 export default MapViewDirections;

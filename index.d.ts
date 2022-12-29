@@ -1,3 +1,11 @@
+import {
+  BASE_URL,
+  AVOID_TYPES,
+  DIRECTION_MODE,
+  TIME_PRECISION,
+  PRECISION,
+} from './src/utils/constant';
+
 declare module 'react-native-maps-directions' {
   // Type definitions for react-native-maps-directions 1.6
   // Project: https://github.com/bramus/react-native-maps-directions
@@ -52,33 +60,35 @@ declare module 'react-native-maps-directions' {
     | {
         latitude: number;
         longitude: number;
-      };
+      }
+    | [number, number];
 
   export type MapViewDirectionsWaypoints =
     | string
     | {
         latitude: number;
         longitude: number;
-      };
+      }
+    | [number, number];
 
   export type MapViewDirectionsDestination =
     | string
     | {
         latitude: number;
         longitude: number;
-      };
+      }
+    | [number, number];
 
   export type MapViewDirectionsMode =
-    | 'DRIVING'
-    | 'BICYCLING'
-    | 'TRANSIT'
-    | 'WALKING';
+    typeof DIRECTION_MODE[keyof typeof DIRECTION_MODE];
 
-  export type MapDirectionAvoid = 'TOLLS' | 'HIGHWAYS' | 'FERRIES';
+  export type MapDirectionAvoid = typeof AVOID_TYPES[keyof typeof AVOID_TYPES];
 
-  export type MapViewDirectionsPrecision = 'high' | 'low';
+  export type MapViewDirectionsPrecision =
+    typeof PRECISION[keyof typeof PRECISION];
 
-  export type MapViewDirectionsTimePrecision = 'now' | 'none';
+  export type MapViewDirectionsTimePrecision =
+    typeof TIME_PRECISION[keyof typeof TIME_PRECISION];
 
   export interface MapViewDirectionsProps {
     /**
@@ -100,11 +110,15 @@ declare module 'react-native-maps-directions' {
     /**
      * Callback that is called when the routing has started.
      */
-    onStart?: (...args: any[]) => any;
+    onStart?: (args: {
+      origin: string;
+      destination: string;
+      waypoints: MapViewDirectionsWaypoints[];
+    }) => any;
     /**
      * Callback that is called when the routing has succesfully finished.
      */
-    onReady?: (...args: MapDirectionsResponse[]) => any;
+    onReady?: (args: MapDirectionsResponse[]) => any;
     /**
      * Callback that is called in case the routing has failed.
      */
@@ -250,6 +264,11 @@ declare module 'react-native-maps-directions' {
      */
     tappable?: boolean;
 
+    /**
+     * @Array
+     * Which parts are need to be avoided from the maps.
+     * Allowed values are "TOLLS", "HIGHWAYS", and "FERRIES".
+     */
     avoid?: MapDirectionAvoid[];
   }
 
