@@ -1,15 +1,22 @@
 /**
  * Decode steps from GMaps Json
  * @param {google.maps.DirectionsStep[]} steps
+ *
  * @returns {({latitude:number; longitude:number})[]}
  */
 export const decode = (steps) => {
-  /** @type {({latitude:number; longitude:number})[]} */
+  /**
+   * @type {({
+   *  latitude:number;
+   *  longitude:number}
+   * )[]}
+   * */
   let points = [];
 
   for (const step of steps) {
     const { points: encoded } = step.polyline;
     const len = encoded.length;
+
     let index = 0;
 
     const coords = {

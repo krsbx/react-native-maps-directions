@@ -1,20 +1,12 @@
 import {
-  BASE_URL,
   AVOID_TYPES,
   DIRECTION_MODE,
   TIME_PRECISION,
   PRECISION,
 } from './src/utils/constant';
 
-declare module 'react-native-maps-directions' {
-  // Type definitions for react-native-maps-directions 1.6
-  // Project: https://github.com/bramus/react-native-maps-directions
-  // Definitions by: Ali Oguzhan Yildiz <https://github.com/alioguzhan>
-  // Definitions by: Chris Shaffer (methodbox)<https://github.com/methodbox>
-  // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-  // TypeScript Version: 3.3
-
-  import * as React from 'react';
+declare module 'rn-maps-directions' {
+  // Type definitions for rn-maps-directions
 
   export type MapDirectionsLegs = [
     {
@@ -272,10 +264,11 @@ declare module 'react-native-maps-directions' {
     avoid?: MapDirectionAvoid[];
   }
 
-  export default class MapViewDirections extends React.Component<
-    MapViewDirectionsProps,
-    any
-  > {
-    render(): JSX.Element;
-  }
+  declare const MapViewDirections: (
+    props: MapViewDirectionsProps
+  ) => JSX.Element;
+
+  export const useRouteFetcher: () => any;
+
+  export default MapViewDirections;
 }

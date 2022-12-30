@@ -4,15 +4,16 @@ import { RouteOptions } from './types';
 /**
  * Resolve fetched routes
  * @param {google.maps.DirectionsRoute & {
- *  precision: RouteOptions['precision']
- * }} route
+ *   precision: RouteOptions['precision']
+ *  }} route
+ *
  * @returns {{
  *  distance: number;
  *  duration: number;
  *  coordinates: ({
- * latitude: number;
- * longitude: number;
- * })[]}}
+ *   latitude: number;
+ *   longitude: number;
+ *  })[]}}
  */
 
 export const resolveRoutes = (route) => ({

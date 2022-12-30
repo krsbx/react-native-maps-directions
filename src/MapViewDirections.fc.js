@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Polyline } from 'react-native-maps';
-import { fetchRoutes } from './utils/fetcher';
+import isEqual from 'lodash.isequal';
+import { fetchRoutesData } from './utils/fetcher';
 import {
   AVOID_TYPES,
   DIRECTION_MODE,
   PRECISION,
   TIME_PRECISION,
 } from './utils/constant';
-import { convertWaypoint } from './utils/waypoint';
+import usePreviousValue from './hooks/usePreviousValue';
+import { MapViewDirectionsProps, LatLng } from './utils/types';
 
+/**
+ * @param {MapViewDirectionsProps} props
+ *
+ * @returns {JSX.Element}
+ */
 const MapViewDirections = (props) => {
   const {
     origin,
@@ -24,9 +31,14 @@ const MapViewDirections = (props) => {
     onError,
     language,
     region,
+    optimizeWaypoints,
     ...rest
   } = props;
 
+  /** @type {MapViewDirectionsProps}  */
+  const prevProps = usePreviousValue(props ?? {});
+
+  /** @type {[ LatLng[] | null, React.Dispatch<React.SetStateAction<LatLng[] | null>>]} */
   const [coordinates, setCoordinates] = useState(null);
 
   /** @param {(() => void) | null} cb */
@@ -36,86 +48,43 @@ const MapViewDirections = (props) => {
     cb?.();
   };
 
-  const fetchAndRenderRoute = async (props) => {
-    const {
-      origin: initialOrigin,
-      destination: initialDestination,
-      waypoints: initialWaypoints = [],
-      splitWaypoints,
-      timePrecision = 'none',
-      onError,
-      onReady,
-      ...rest
-    } = props;
-
-    if (!rest.apikey) {
-      console.warn(`MapViewDirections Error: Missing API Key`); // eslint-disable-line no-console
-      return;
-    }
-
-    if (!initialOrigin || !initialDestination) {
-      return;
-    }
-
-    const timePrecisionString = timePrecision === 'none' ? '' : timePrecision;
-    const routes = convertWaypoint({
-      splitWaypoints,
-      initialDestination,
-      initialOrigin,
-      initialWaypoints,
-    });
-
-    try {
-      const response = await Promise.all(
-        routes.map((route, index) =>
-          fetchRoutes({ ...route, ...rest, index, timePrecisionString })
-        )
-      );
-
-      // Combine all Directions API Request results into one
-      const result = response.reduce(
-        (acc, curr) => {
-          acc.coordinates.push(...curr.coordinates);
-          acc.distance += curr.distance;
-          acc.duration += curr.duration;
-          acc.fares.push(curr.fare);
-          acc.legs = curr.legs;
-          acc.waypointOrder.push(curr.waypointOrder);
-
-          return acc;
-        },
-        {
-          coordinates: [],
-          distance: 0,
-          duration: 0,
-          fares: [],
-          legs: [],
-          waypointOrder: [],
-        }
-      );
-
-      // Plot it out and call the onReady callback
-      setCoordinates(result.coordinates);
-      onReady?.(result);
-    } catch (err) {
-      resetState();
-
-      console.warn(`MapViewDirections Error: ${err}`);
-
-      onError?.(err);
-    }
-  };
-
   useEffect(() => {
+    if (
+      isEqual(prevProps?.origin, origin) &&
+      isEqual(prevProps?.destination, destination) &&
+      isEqual(prevProps?.waypoints, waypoints) &&
+      isEqual(prevProps?.mode, mode) &&
+      isEqual(prevProps?.precision, precision) &&
+      isEqual(prevProps?.splitWaypoints, splitWaypoints) &&
+      isEqual(prevProps?.avoid, avoid) &&
+      isEqual(prevProps?.optimizeWaypoints, optimizeWaypoints)
+    )
+      return;
+
     if (!props.resetOnChange) {
-      fetchAndRenderRoute(props);
+      fetchRoutesData(props).then(({ coordinates }) =>
+        setCoordinates(coordinates)
+      );
       return;
     }
 
-    resetState(() => fetchAndRenderRoute(props));
-  }, [origin, destination, waypoints, mode, precision, splitWaypoints, avoid]);
+    resetState(() =>
+      fetchRoutesData(props).then(({ coordinates }) =>
+        setCoordinates(coordinates)
+      )
+    );
+  }, [
+    origin,
+    destination,
+    waypoints,
+    mode,
+    precision,
+    splitWaypoints,
+    avoid,
+    optimizeWaypoints,
+  ]);
 
-  if (!coordinates || coordinates.length) return null;
+  if (!coordinates || !coordinates.length) return null;
 
   return <Polyline coordinates={coordinates} {...rest} />;
 };
@@ -127,6 +96,7 @@ MapViewDirections.propTypes = {
       latitude: PropTypes.number.isRequired,
       longitude: PropTypes.number.isRequired,
     }),
+    PropTypes.array,
   ]),
   waypoints: PropTypes.arrayOf(
     PropTypes.oneOfType([
@@ -144,6 +114,7 @@ MapViewDirections.propTypes = {
       latitude: PropTypes.number.isRequired,
       longitude: PropTypes.number.isRequired,
     }),
+    PropTypes.array,
   ]),
   apikey: PropTypes.string.isRequired,
   onStart: PropTypes.func,

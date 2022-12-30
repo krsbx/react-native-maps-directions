@@ -1,4 +1,17 @@
-import { AVOID_TYPES, PRECISION, TIME_PRECISION } from '../utils/constant';
+import {
+  AVOID_TYPES,
+  PRECISION,
+  TIME_PRECISION,
+  DIRECTION_MODE,
+} from '../utils/constant';
+
+/**
+ * @typedef {typeof TIME_PRECISION[keyof typeof TIME_PRECISION]} TimePrecision
+ * @typedef {typeof PRECISION[keyof typeof PRECISION]} Precision
+ * @typedef {typeof AVOID_TYPES[keyof typeof AVOID_TYPES]} AvoidPlaces
+ * @typedef {typeof DIRECTION_MODE[keyof DIRECTION_MODE]} TravelMode
+ * @typedef {string | LatLng | [number, number]} LatLngString
+ */
 
 /**
  * @typedef {{
@@ -15,7 +28,7 @@ import { AVOID_TYPES, PRECISION, TIME_PRECISION } from '../utils/constant';
  *     start_location: Pick<google.maps.LatLng, 'lat' | 'lng'>
  *     html_instructions: string;
  *     polyline: google.maps.DirectionsPolyline
- *     travel_mode: google.maps.TravelMode;
+ *     travel_mode: TravelMode;
  *     maneuver: string | undefined;
  *    }];
  *    traffic_speed_entry: any[];
@@ -25,20 +38,20 @@ import { AVOID_TYPES, PRECISION, TIME_PRECISION } from '../utils/constant';
 
 /**
  * @typedef {{
- * url: string,
- * origin: string | LatLng,
- * destination: string | LatLng,
- * waypoints: (string | LatLng)[],
- * language: string,
- * apikey: string,
- * mode: google.maps.TravelMode,
- * region: string,
- * precision: typeof PRECISION[keyof typeof PRECISION],
- * timePrecision: typeof TIME_PRECISION[keyof typeof TIME_PRECISION],
- * channel?: string,
- * avoid?: (typeof AVOID_TYPES[keyof typeof AVOID_TYPES])[],
- * index: number,
- * optimizeWaypoints: boolean
+ *  url: string,
+ *  origin: LatLngString,
+ *  destination: LatLngString,
+ *  waypoints: (LatLngString)[],
+ *  language: string,
+ *  apikey: string,
+ *  mode: TravelMode,
+ *  region: string,
+ *  precision: Precision,
+ *  timePrecision: TimePrecision,
+ *  channel?: string,
+ *  avoid?: (AvoidPlaces)[],
+ *  index: number,
+ *  optimizeWaypoints: boolean
  * }} RouteOptions
  */
 
@@ -46,15 +59,76 @@ import { AVOID_TYPES, PRECISION, TIME_PRECISION } from '../utils/constant';
  * @typedef {({
  *  latitude: number;
  *  longitude: number;
- * }) | [number, number]} LatLng
+ * }) LatLng
  */
 
 /**
  * @typedef {(options: {
- *  origin: string | LatLng;
- *  destination: string | LatLng;
- *  waypoints: (string | LatLng)[];
+ *  origin: LatLngString;
+ *  destination: LatLngString;
+ *  waypoints: (LatLngString)[];
  * }) => void} OnStartFetching
+ */
+
+/**
+ * @typedef {{
+ *  origin: LatLngString;
+ *  waypoints?: (LatLngString)[];
+ *  destination: LatLngString;
+ *  apikey: string;
+ *  onStart?: (args: {
+ *    origin: string;
+ *    destination: string;
+ *    waypoints: LatLngString[];
+ *  }) => void
+ *  mode?: TravelMode;
+ *  precision?: Precision;
+ *  timePrecision?: TimePrecision;
+ *  channel?: string;
+ *  language?: string;
+ *  resetOnChange?: boolean;
+ *  optimizeWaypoints?: boolean;
+ *  splitWaypoints?: string;
+ *  directionsServiceBaseUrl?: string;
+ *  region?: string;
+ *  strokeWidth?: number;
+ *  strokeColor?: string;
+ *  strokeColors?: string[];
+ *  lineCap?: string;
+ *  lineJoin?: string;
+ *  miterLimit?: number;
+ *  geodesic?: boolean;
+ *  lineDashPhase?: number;
+ *  lineDashPattern?: number[];
+ *  tappable?: boolean;
+ *  avoid?: AvoidPlaces[];
+ * }} MapViewDirectionsProps
+ */
+
+/**
+ * @typedef {
+ *  Omit<MapViewDirectionsProps,
+ *   | 'resetOnChange'
+ *   | 'strokeWidth'
+ *   | 'strokeColor'
+ *   | 'strokeColors'
+ *   | 'lineCap'
+ *   | 'lineJoin'
+ *   | 'lineDashPhase'
+ *   |'lineDashPattern'
+ *   | 'tappable'>
+ * } RouteParams
+ */
+
+/**
+ * @typedef {{
+ *   coordinates: LatLng[];
+ *   distance: number;
+ *   duration: number;
+ *   legs: google.maps.DirectionsLeg[];
+ *   fare: google.maps.TransitFare[];
+ *   waypointOrder: number[];
+ * }} RoutesData
  */
 
 export {};

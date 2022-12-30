@@ -6,6 +6,7 @@ import { DIRECTION_MODE, PRECISION } from './constant';
 /**
  * Fetch the GMaps Routes from the given options
  * @param {RouteOptions} options
+ *
  * @returns {Promise<ReturnType<typeof resolveRoutes>>}
  */
 export const fetchRoute = async ({

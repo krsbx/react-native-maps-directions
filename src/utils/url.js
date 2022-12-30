@@ -4,6 +4,7 @@ import { RouteOptions } from './types';
 /**
  * Convert the url in a way so GMaps can process
  * @param {RouteOptions} options
+ *
  * @returns {string}
  */
 export const convertUrl = (options) => {

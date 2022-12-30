@@ -2,18 +2,18 @@ import { WAYPOINT_LIMIT } from './constant';
 import { LatLng } from './types';
 
 /**
+ * Convert the waypoints to view parts/chunks
  * @param {object} options
  * @param {boolean} options.splitWaypoints
  * @param {(string|LatLng)[]} options.initialOrigin
  * @param {(string|LatLng)[]} options.initialDestination
  * @param {(string|LatLng)[]} options.initialWaypoints
  *
- * @return {{
- *  waypoints: (string | LatLng)[];
- *  origin: string | LatLng;
- *  destination: string | LatLng;
- *  }[]
- * }
+ * @return {({
+ *   waypoints: (string | LatLng)[];
+ *   origin: string | LatLng;
+ *   destination: string | LatLng;
+ *  })[]}
  */
 export const convertWaypoint = ({
   splitWaypoints,
@@ -23,7 +23,13 @@ export const convertWaypoint = ({
 }) => {
   // Routes array which we'll be filling.
   // We'll perform a Directions API Request for reach route
-  /** @type {({waypoints: (string|LatLng)[]; origin: string|LatLng; destination: string|LatLng})[]} */
+  /**
+   * @type {({
+   *  waypoints: (string|LatLng)[];
+   *  origin: string|LatLng;
+   *  destination: string|LatLng
+   *  })[]}
+   * */
   const routes = [];
 
   // We need to split the waypoints in chunks, in order to not exceede the max waypoint limit
